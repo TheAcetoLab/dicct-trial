@@ -11,7 +11,7 @@
 
 
 
-<title>Home</title>
+<title>Effect of Digoxin on clusters of circulating tumor cells in patients with metastatic breast cancer: a phase 1 trial</title>
 
 <script src="site_libs/header-attrs-2.25/header-attrs.js"></script>
 <script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
@@ -29,6 +29,9 @@
        h6 {font-size: 12px;}
        code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
        pre:not([class]) { background-color: white }</style>
+<script src="site_libs/jqueryui-1.13.2/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
 <script src="site_libs/navigation-1.1/tabsets.js"></script>
 <script src="site_libs/navigation-1.1/codefolding.js"></script>
 <link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
@@ -235,6 +238,69 @@ $(document).ready(function () {
 
 
 
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
 
 </head>
 
@@ -242,6 +308,16 @@ $(document).ready(function () {
 
 
 <div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
 
 
 
@@ -293,7 +369,9 @@ $(document).ready(function () {
 
 
 
-<h1 class="title toc-ignore">Home</h1>
+<h1 class="title toc-ignore">Effect of Digoxin on clusters of
+circulating tumor cells in patients with metastatic breast cancer: a
+phase 1 trial</h1>
 
 </div>
 
@@ -369,15 +447,15 @@ results.</p>
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomTheAcetoLabdiccttrialtreec9b5aea22bbffed2cf78c86fdddda391c5b77b6ftargetblankc9b5aeaa">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomTheAcetoLabdiccttrialtree6ac0cf03639779c68fbe239e390f04f9953fa200targetblank6ac0cf0a">
 <span class="glyphicon glyphicon-ok text-success"
 aria-hidden="true"></span> <strong>Repository version:</strong>
-<a href="https://github.com/TheAcetoLab/dicct-trial/tree/c9b5aea22bbffed2cf78c86fdddda391c5b77b6f" target="_blank">c9b5aea</a>
+<a href="https://github.com/TheAcetoLab/dicct-trial/tree/6ac0cf03639779c68fbe239e390f04f9953fa200" target="_blank">6ac0cf0</a>
 </a>
 </p>
 </div>
 <div
-id="strongRepositoryversionstrongahrefhttpsgithubcomTheAcetoLabdiccttrialtreec9b5aea22bbffed2cf78c86fdddda391c5b77b6ftargetblankc9b5aeaa"
+id="strongRepositoryversionstrongahrefhttpsgithubcomTheAcetoLabdiccttrialtree6ac0cf03639779c68fbe239e390f04f9953fa200targetblank6ac0cf0a"
 class="panel-collapse collapse">
 <div class="panel-body">
 <p>
@@ -387,7 +465,7 @@ reproducibility.
 </p>
 <p>
 The results in this page were generated with repository version
-<a href="https://github.com/TheAcetoLab/dicct-trial/tree/c9b5aea22bbffed2cf78c86fdddda391c5b77b6f" target="_blank">c9b5aea</a>.
+<a href="https://github.com/TheAcetoLab/dicct-trial/tree/6ac0cf03639779c68fbe239e390f04f9953fa200" target="_blank">6ac0cf0</a>.
 See the <em>Past versions</em> tab to see a history of the changes made
 to the R Markdown and HTML files.
 </p>
@@ -402,15 +480,19 @@ were generated:
 </p>
 <pre><code>
 Ignored files:
+    Ignored:    .DS_Store
     Ignored:    .Rhistory
     Ignored:    .Rproj.user/
 
 Untracked files:
-    Untracked:  code/R-functions/
-    Untracked:  configuration/
+    Untracked:  analysis/index.md
+    Untracked:  analysis/style.css
     Untracked:  data/dge_tp6_patient_5.rds
     Untracked:  data/gse_tp6_patient_5.rds
     Untracked:  data/se_patient_5.rds
+
+Unstaged changes:
+    Modified:   README.md
 
 </code></pre>
 <p>
@@ -457,6 +539,40 @@ Message
 <tbody>
 <tr>
 <td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/TheAcetoLab/dicct-trial/blob/6ac0cf03639779c68fbe239e390f04f9953fa200/analysis/index.Rmd" target="_blank">6ac0cf0</a>
+</td>
+<td>
+Francesc Castro-Giner
+</td>
+<td>
+2023-11-28
+</td>
+<td>
+update style html
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/TheAcetoLab/dicct-trial/b52e042dda3617dd348fbb9cc12a6e57730a6738/docs/index.html" target="_blank">b52e042</a>
+</td>
+<td>
+Francesc Castro-Giner
+</td>
+<td>
+2023-11-28
+</td>
+<td>
+Build site.
+</td>
+</tr>
+<tr>
+<td>
 html
 </td>
 <td>
@@ -496,7 +612,67 @@ Start workflowr project.
 </div>
 </div>
 </div>
-<p>Welcome to my research website.</p>
+<p>A <a href="https://github.com/workflowr/workflowr">workflowr</a>
+project.</p>
+<div id="data-pre-processing" class="section level2" number="0.1">
+<h2><span class="header-section-number">0.1</span> Data
+pre-processing</h2>
+<p>Raw data is available at Gene Expression Omnibus (GEO, NCBI;
+accession number <a
+href="https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE180097">XXXXX</a>).
+Data processing is computationally expensive and is not covered in this
+repository. We provide description of the data pre-processing workflow
+together with software version in the original publication. Processed
+data, large result files, additional functions, references and metadata
+are were archived at <a
+href="https://doi.org/10.5281/zenodo.1021505"><img
+src="https://zenodo.org/badge/DOI/10.5281/zenodo.1021505.svg"
+alt="DOI" /></a></p>
+</div>
+<div id="data-and-code-availability" class="section level2"
+number="0.2">
+<h2><span class="header-section-number">0.2</span> Data and code
+availability</h2>
+<p>To reproduce our analysis, first clone source code from the <a
+href="https://github.com/TheAcetoLab/dicct-trial">GitHub repository</a>.
+This repository is also archived at <a
+href="https://doi.org/XXXX/XXXX"><img
+src="https://zenodo.org/badge/DOI/XXX/XXXX.svg" alt="DOI" /></a></p>
+<pre><code>git clone https://github.com/TheAcetoLab/dicct-trial</code></pre>
+<p>Next, download processed data deposited in <a
+href="https://doi.org/10.5281/zenodo.1021505">Zenodo</a> into the cloned
+project folder ./data directory and untar the files.</p>
+<pre><code>for file in *.tar.gz; do tar xzvf &quot;${file}&quot; &amp;&amp; rm &quot;${file}&quot;; done</code></pre>
+</div>
+<div id="reproducibility" class="section level2" number="0.3">
+<h2><span class="header-section-number">0.3</span> Reproducibility</h2>
+<p>The results form our analyses are listed below in webpage format.
+They were generated from R Markdown documents deposited in the <a
+href="https://github.com/TheAcetoLab/dicct-trial">GitHub repository</a>.
+The workflow of the analysis was created using the <a
+href="https://cran.r-project.org/web/packages/workflowr/index.html">workflowr</a>
+R package and can be reproduced in its totality using <a
+href="https://cran.r-project.org/web/packages/workflowr/index.html">workflowr</a>
+<a
+href="https://jdblischak.github.io/workflowrBeta/reference/wflow_build.html">wflow_build</a>
+command after the installation of the proper R packages. Session info,
+including R and package versions, was automatically included at the end
+of each analysis file.</p>
+<p>Files containing pre-computed results from differential expression or
+gene-set enrichment analyses were deposited in <a
+href="https://doi.org/10.5281/zenodo.1021505"><img
+src="https://zenodo.org/badge/DOI/10.5281/zenodo.1021505.svg"
+alt="DOI" /></a>. In order to generate those files again change the
+option <code>eval = FALSE</code> to <code>eval = TRUE</code> in the
+specific code chunk from the R Markdown file.</p>
+</div>
+<div id="analyses" class="section level2" number="0.4">
+<h2><span class="header-section-number">0.4</span> Analyses</h2>
+<ul>
+<li><a href="patient_5-dge.html">Differential expression analysis of
+patient 5</a></li>
+</ul>
+</div>
 
 
 <!-- Adjust MathJax settings so that all math formulae are shown using
@@ -514,6 +690,8 @@ footer is added to webpages before the MathJax javascript. -->
 
 
 
+</div>
+</div>
 
 </div>
 
@@ -551,6 +729,35 @@ $(document).ready(function () {
 });
 </script>
 
+<script>
+$(document).ready(function ()  {
+
+    // temporarily add toc-ignore selector to headers for the consistency with Pandoc
+    $('.unlisted.unnumbered').addClass('toc-ignore')
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3,h4,h5",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
 
 <!-- dynamically load mathjax for compatibility with self-contained -->
 <script>
