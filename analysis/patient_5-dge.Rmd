@@ -1,0 +1,526 @@
+---
+title: "Gene expression analysis of Patient 5"
+author: "Francesc Castro-Giner"
+date: '`r format(Sys.Date(), "%B %d, %Y")`'
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+params:
+  date: '`r format(Sys.Date(), "%B %d, %Y")`'
+  se: ./data/se_patient_5.rds
+  output_dir: ./output/rnaseq/p28436_o30365/dge/BC001
+---
+
+## Load libraries, additional functions and data
+
+Setup environment
+```{r setup, include=TRUE, warning=FALSE, message=FALSE}
+knitr::opts_chunk$set(results='asis', echo=TRUE, message=FALSE, warning=FALSE, 
+                      error=FALSE, fig.align = 'center', fig.width = 3.5, 
+                      fig.asp = 0.618, dpi = 600, dev = c("png", "pdf"), 
+                      engine.opts = list(bash = "-l"))
+
+options(stringsAsFactors = FALSE)
+
+use_seed <- 1100101
+set.seed(use_seed)
+# dir.create(params$output_dir, recursive = TRUE, showWarnings = FALSE)
+```
+
+Load packages
+```{r load-libraries}
+library(tidyverse)
+library(showtext)
+library(foreach)
+library(DT)
+library(knitr)
+library(kableExtra)
+library(cowplot)
+library(colorblindr)
+library(RColorBrewer)
+library(ggbeeswarm)
+library(ggrepel)
+library(magrittr)
+library(scuttle)
+library(DESeq2)
+library(DEGreport)
+library(ComplexHeatmap)
+library(circlize)
+library(enrichplot)
+```
+
+Load ggplot theme
+```{r ggplot-theme}
+source("./configuration/rmarkdown/ggplot_theme.R")
+```
+
+Set color palettes
+```{r, echo = FALSE}
+# source("./configuration/rmarkdown/color_palettes.R")
+```
+
+Load custom functions
+```{r load-functions}
+source('./code/R-functions/gse_omnibus.r')
+source('./code/R-functions/gse_report.r')
+```
+
+
+Clean files generated in previous runs
+```{r clean-files}
+rmd_file <- current_input()
+if(!is.null(rmd_file)) {
+  figures_dir <- file.path('./docs/figure',rmd_file)
+  if(dir.exists(figures_dir)) {
+    unlink(file.path(figures_dir, "*"))
+  }
+}
+```
+
+## Data processing
+
+Load data
+```{r load-data}
+se <- readRDS(params$se)
+```
+
+Subset by feature type. Using only protein coding features
+```{r dw-subset-feature-type}
+use_rows <- rowData(se)$gene_type %in% c('protein_coding')
+se <- se[use_rows,]
+```
+
+Filtering out low-abundance features. Keeping those features with at least 10 counts in at least 80% of samples of the smallest group.
+```{r dw-subset-feature-abundance}
+min_count <- 10
+min_prop <- 0.8
+
+# Using filterByExpr
+# use_rows <- filterByExpr(se, group=se$donor, min.count = min_count, min.prop = min_prop, large.n = 1)
+
+# Proportion of samples with min_counts at each group
+use_group <- as.factor(se$timepoint)
+counts_mat <- assay(se, 'counts')
+counts_stats <- foreach(i=levels(use_group), .combine = cbind) %do% {
+  use_cols <- se$timepoint == i
+  if(sum(use_cols) > 1) {
+    rowSums(counts_mat[,use_cols] >= min_count)  / sum(use_cols)
+  } else {
+    ifelse(counts_mat[,use_cols] >=  min_count, 1, 0)
+  }
+} %>% data.frame
+colnames(counts_stats) <- levels(use_group)
+counts_stats$all <- rowSums(counts_mat >= min_count)  / ncol(counts_mat)
+
+# Keep genes with min_counts threshold in >=min_prop of samples in at least 1 group
+rows_to_keep <- rownames(counts_stats)[rowSums(counts_stats >= min_prop) > 0]
+se <- se[rows_to_keep,]
+```
+
+
+## Data generation
+```{r generate-dds}
+se$timepoint6 <- ifelse(se$timepoint == "6", "tp6", "tp1to3")
+dds6 <- DESeqDataSetFromMatrix(countData = assay(se, 'counts'),
+                              colData = colData(se),
+                              design= ~ timepoint6)
+
+```
+
+Differential expression time-point 6 vs others
+```{r run-deg-tp6, eval = FALSE}
+dds6 <- DESeq(dds6)
+# resultsNames(dds6) # lists the coefficients
+# Extract and annotate results
+dge_tp6 <- results(dds6, name = 'timepoint6_tp6_vs_tp1to3') %>% data.frame
+dge_tp6$ensembl_gene_id <- rownames(dge_tp6)
+add_gene_annot <- rowData(se) %>% 
+  data.frame %>% 
+  rownames_to_column('ensembl_gene_id') %>% 
+  dplyr::select(ensembl_gene_id, Length, is.mito, gene_name, gene_type, is.ribo, mean, detected)
+dge_tp6 %<>% 
+  left_join(add_gene_annot, multiple = "all") %>% 
+  arrange(pvalue)
+saveRDS(dge_tp6, file = './data/dge_tp6_patient_5.rds')
+```
+
+Run GSE omnibus for timepoint 6 analysis timepoint
+```{r run-gse-omnibus-tp6, eval = FALSE}
+library(org.Hs.eg.db)
+dge_results <- readRDS(file = './data/dge_tp6_patient_5.rds')
+
+lfc_var <- 'log2FoldChange'
+pval_var <- 'padj'
+
+res_gse <- gse_omnibus(
+  feature_names = dge_results$gene_name,
+  p = dge_results[,pval_var],
+  fc = dge_results[,lfc_var],
+  p_thrs = 0.1,
+  fc_thrs = 0,
+  # gmt_files = gmt_files_symbols, 
+  return_sets = c('abs', 'up', 'down'),
+  
+  run_enrichGO = TRUE,
+  
+  go_ontologies = c('BP', 'MF'),
+  go_simplify = TRUE,
+  go_simplify_p = 0.05,
+  go_simplify_cutoff = 0.6
+)
+
+saveRDS(res_gse, file = './data/gse_tp6_patient_5.rds')
+rm(dge_results)
+```
+
+
+Load generated data
+```{r load-dge-data}
+dge_tp6 <- readRDS(file = './data/dge_tp6_patient_5.rds')
+dge_tp6_gse <- readRDS(file = './data/gse_tp6_patient_5.rds')
+```
+
+
+## Differential expression: Timepoint 6
+
+### Table of results
+```{r dge-tp6-tab}
+dge_tp6 %>% 
+  mutate(direction = ifelse(log2FoldChange > 0, 'Up', 'Down')) %>% 
+  dplyr::select(gene_name, log2FoldChange, baseMean, pvalue, padj, direction) %>%
+  datatable(., 
+            rownames = FALSE, 
+            filter = 'top', 
+            caption = 'Results from differential expression analysis timepoint 6 vs others',
+            extensions = 'Buttons', 
+            options = list(
+              dom = 'Blfrtip',
+              buttons = c('csv', 'excel')
+            ))  %>% 
+  formatRound(c('log2FoldChange','baseMean'), digits = 2) %>%
+  formatSignif(c('pvalue', 'padj'), digits = 3)
+```
+
+
+### Heatmap
+
+Showing top-100 genes with adjusted P value < 0.05
+
+```{r dge-tp6-heatmap, fig.width=5.2, fig.asp=2}
+rld <- rlog(dds6, blind=FALSE)
+rld_mat <- assays(rld)[[1]]
+
+use_genes <- dge_tp6 %>% 
+  filter(padj <= 0.05) %>% 
+  arrange(desc(padj)) %>% 
+  head(100) %>% 
+  pull(ensembl_gene_id) %>% 
+  unique
+
+mat <- rld_mat[use_genes,]
+rownames(mat) <- rowData(se)[use_genes, 'gene_name']
+zmat <- t(apply(mat, 1, scale, center = TRUE, scale = TRUE))
+colnames(zmat) <- colnames(mat)
+
+# Sort columns by group variable
+use_annot <- colData(se) %>% data.frame %>% arrange(timepoint, exp) 
+zmat <- zmat[,use_annot$sample_alias]
+
+# Col Annotation
+use_annot_levels <- unique(use_annot$timepoint)
+column_ha <-  HeatmapAnnotation(
+  timepoint = as.character(use_annot$timepoint),
+  col = list(
+    timepoint = brewer.pal(length(use_annot_levels), 'Greys') %>% set_names(use_annot_levels)
+  )
+)
+row_ha_t <-  HeatmapAnnotation(
+  timepoint = as.character(use_annot$timepoint),
+  col = list(
+    timepoint = brewer.pal(length(use_annot_levels), 'Greys') %>% set_names(use_annot_levels)
+  )
+  )
+
+
+# Main heatmap
+ht <- Heatmap(
+    zmat,
+    top_annotation = column_ha,
+    # right_annotation = row_ha,
+    name= 'z-score',
+    cluster_columns = FALSE,
+    row_names_side = 'left',
+    row_names_gp = gpar(fontsize = 6)
+  )
+
+draw(ht)
+```
+
+
+
+## Over-enrichment analysis: GO BP
+
+### Down-regulated pathways
+```{r tp6-ora-gobp-down}
+direction <- 'down'
+```
+
+#### Similarity matrix using simplified pathways
+JC Similarity matrix for pathways with an adjusted P-value < 0.05 and removing redundant pathways
+```{r tp6-ora-gobp-down-sim-simplify-ht, fig.width=7.2}
+use_gse_res <- dge_tp6_gse$enrichGO[[direction]]$BP
+
+# Number of terms to show
+# showCategoryN <- 30
+
+# Calculate jaccard simialrity index
+use_gse_res <- pairwise_termsim(use_gse_res, method = 'JC')
+
+# Collect sim matrix for top N terms
+use_terms <- use_gse_res@result %>% 
+  filter(simplify) %>%
+  filter(p.adjust < 0.05) %>% 
+  # head(showCategoryN) %>% 
+  collect %>% 
+  .[['Description']]
+use_mat <- use_gse_res@termsim[use_terms,use_terms]
+
+# Collect results for selected terms
+use_res <- use_gse_res@result[use_terms,]
+
+# Transform matrix to symmetric
+for(x in rownames(use_mat)){
+  for(y in colnames(use_mat)) {
+    if(x == y) {
+       use_mat[x,y] <- 1
+    } else {
+      max_sim <- max(c(use_mat[x,y], use_mat[y,x]), na.rm = TRUE)
+      use_mat[x,y] <- max_sim
+      use_mat[y,x] <- max_sim
+    }
+  }
+}
+
+
+col_fun <- colorRamp2(seq(0, 1, length.out = 4), brewer.pal(4, "GnBu"))
+n_split <- 5
+
+
+ht <- Heatmap(
+  use_mat, 
+  name = 'Jaccard index',
+  column_split = n_split, 
+  row_split = n_split, 
+  column_title = NULL,
+  row_title = NULL,
+  col = col_fun,
+  show_column_dend = FALSE,
+  show_column_names = FALSE, 
+  show_row_dend = FALSE,
+  row_names_side = "left",
+  row_names_gp = gpar(fontsize = 8),
+  row_names_max_width = unit(7, "cm"),
+  border = TRUE,
+  # top_annotation = ha_top, 
+  heatmap_legend_param = list(title_gp = gpar(fontsize = 8),
+                              labels_gp = gpar(fontsize = 8)
+                              ),
+  width = unit(6, "cm"))
+
+draw(ht)
+```
+
+#### Similarity matrix
+JC Similarity matrix for top-30 pathways with an adjusted P-value < 0.05
+```{r tp6-ora-gobp-down-sim-ht, fig.width = 10.2, fig.asp = 0.6}
+use_gse_res <- dge_tp6_gse$enrichGO[[direction]]$BP
+
+# Number of terms to show
+showCategoryN <- 20
+
+# Calculate jaccard simialrity index
+use_gse_res <- pairwise_termsim(use_gse_res, method = 'JC')
+
+# Collect sim matrix for top N terms
+use_terms <- use_gse_res@result %>% 
+  # filter(simplify) %>% 
+  filter(p.adjust < 0.05) %>% 
+  # head(showCategoryN) %>% 
+  collect %>% 
+  .[['Description']]
+use_mat <- use_gse_res@termsim[use_terms,use_terms]
+
+# Collect results for selected terms
+use_res <- use_gse_res@result[use_terms,]
+
+# Transform matrix to symmetric
+for(x in rownames(use_mat)){
+  for(y in colnames(use_mat)) {
+    if(x == y) {
+       use_mat[x,y] <- 1
+    } else {
+      max_sim <- max(c(use_mat[x,y], use_mat[y,x]), na.rm = TRUE)
+      use_mat[x,y] <- max_sim
+      use_mat[y,x] <- max_sim
+    }
+  }
+}
+
+# Plot Heatmap
+col_fun <- colorRamp2(seq(0, 1, length.out = 4), brewer.pal(4, "GnBu"))
+n_split <- 7
+
+ha_row <- rowAnnotation(
+  foo = anno_block(
+    labels = c("cellular response to acidic pH",
+               "cell-cell adhesion",
+               "mitotic nuclear division",
+               "regulation of mitotic cell cycle",
+               "regulation of mitotic spindle checkpoint",
+               "negative regulation of mitosis",
+               "regulation of nuclear division"),
+    labels_gp = gpar(col = "black", fontsize = 8),
+    gp = gpar(lwd = 0, lty = 0),
+    labels_rot = 0,
+    labels_just = 'right',
+    width = unit(0.5, "cm")
+    )
+  )
+
+ht <- Heatmap(
+  use_mat, 
+  name = 'Jaccard index',
+  column_split = n_split, 
+  row_split = n_split, 
+  column_title = NULL,
+  row_title = NULL,
+  col = col_fun,
+  
+  show_column_dend = FALSE,
+  show_row_dend = FALSE,
+  
+  show_column_names = TRUE, 
+  column_names_gp = gpar(fontsize = 8),
+  column_names_max_height = unit(20, "cm"),
+  
+  show_row_names = FALSE, 
+  row_names_side = "left",
+  row_names_gp = gpar(fontsize = 8),
+  row_names_max_width = unit(2, "cm"),
+  
+  border = TRUE,
+  # top_annotation = ha_top,
+  left_annotation = ha_row,
+  heatmap_legend_param = list(title_gp = gpar(fontsize = 8),
+                              labels_gp = gpar(fontsize = 8)
+                              ),
+  width = unit(12, "cm"),
+  height = unit(6, "cm")
+  )
+
+draw(ht)
+```
+
+
+### Dotplot with simplified terms
+```{r tp6-ora-gobp-simplify-dot-plot, fig.width=4.2, fig.asp = 0.8}
+label_func <- default_labeller(label_format)
+use_data <- foreach(direction = c('up', 'down'), .combine = rbind) %do% {
+  dge_tp6_gse$enrichGO[[direction]]$BP@result %>% 
+    filter(simplify) %>%
+    filter(p.adjust < 0.05) %>% 
+    arrange(p.adjust) %>% 
+    mutate(direction = direction)
+} %>% 
+  mutate(
+    direction = ifelse(direction == 'up', 'Up-regulated', direction),
+    direction = ifelse(direction == 'down', 'Down-regulated', direction)
+  )
+
+use_data %>% 
+  mutate(Description = fct_reorder(Description, -log10(p.adjust))) %>% 
+  ggplot(aes(
+    y = Description,
+    x = -log10(p.adjust),
+    size = GeneProp, 
+    # color = -log10(p.adjust),
+    # fill = -log10(p.adjust),
+    fill = direction
+    )
+  ) +
+    geom_point(alpha = 0.8, shape = 21) +
+    scale_fill_distiller(palette = "Greens", direction = 1) +
+    scale_fill_manual(values = c(`Up-regulated` = '#ff3b20', `Down-regulated` = '#0433ff')) +
+    scale_size_area(max_size = 8, limits = c(0, max(use_data$GeneProp)), breaks = seq(0.1,max(use_data$GeneProp),0.10)) +
+    scale_y_discrete(labels = default_labeller(30)) +
+    scale_x_continuous(expand = expansion(mult = c(0.2, .1))) +
+    ggforce::facet_col(vars(direction), scales = "free_y", space = "free") +
+    labs(
+      y = NULL,
+      # fill = bquote("-log"[10] ~ .("Adjusted P value")),
+      size = "Gene proportion",
+      # caption = 'Showing gene-sets with adjusted P value < 0.05'   
+    ) +
+    guides(fill = 'none') +
+    theme(
+      axis.text.y = element_text(size = 8),
+      panel.border = element_rect(color = "black", fill = NA, linewidth = 0.4),
+      panel.grid.major.y = element_line(linewidth = 0.1, colour="grey60", linetype = 'dashed'),
+      strip.background = element_blank()
+      )
+```
+
+
+### Dotplot top-30 terms
+```{r tp6-ora-gobp-top30-dot-plot, fig.width=5.2, fig.asp = 2.2}
+showCategoryN <- 30
+label_func <- default_labeller(label_format)
+use_data <- foreach(direction = c('up', 'down'), .combine = rbind) %do% {
+  dge_tp6_gse$enrichGO[[direction]]$BP@result %>% 
+    filter(p.adjust < 0.05) %>% 
+    arrange(p.adjust) %>% 
+    head(showCategoryN) %>% 
+    mutate(direction = direction)
+} %>% 
+  mutate(
+    direction = ifelse(direction == 'up', 'Up-regulated', direction),
+    direction = ifelse(direction == 'down', 'Down-regulated', direction)
+  )
+
+use_data %>% 
+  mutate(Description = fct_reorder(Description, -log10(p.adjust))) %>% 
+  ggplot(aes(
+    y = Description,
+    x = -log10(p.adjust),
+    size = GeneProp, 
+    # color = -log10(p.adjust),
+    # fill = -log10(p.adjust),
+    fill = direction
+    )
+  ) +
+    geom_point(alpha = 0.8, shape = 21) +
+    scale_fill_distiller(palette = "Greens", direction = 1) +
+    scale_fill_manual(values = c(`Up-regulated` = '#ff3b20', `Down-regulated` = '#0433ff')) +
+    scale_size_area(max_size = 8, limits = c(0, max(use_data$GeneProp)), breaks = seq(0.1,max(use_data$GeneProp),0.10)) +
+    scale_y_discrete(labels = default_labeller(50)) +
+    scale_x_continuous(expand = expansion(mult = c(0.2, .1))) +
+    ggforce::facet_col(vars(direction), scales = "free_y", space = "free") +
+    labs(
+      y = NULL,
+      # fill = bquote("-log"[10] ~ .("Adjusted P value")),
+      size = "Gene proportion",
+      # caption = 'Showing gene-sets with adjusted P value < 0.05'   
+    ) +
+    guides(fill = 'none') +
+    theme(
+      axis.text.y = element_text(size = 8),
+      panel.border = element_rect(color = "black", fill = NA, linewidth = 0.4),
+      panel.grid.major.y = element_line(linewidth = 0.1, colour="grey60", linetype = 'dashed'),
+      strip.background = element_blank()
+      )
+```
+
+## Stop knitr
+```{r stop-knitr}
+knitr::knit_exit()
+```
