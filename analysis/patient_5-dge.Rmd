@@ -520,7 +520,3 @@ use_data %>%
       )
 ```
 
-## Stop knitr
-```{r stop-knitr}
-knitr::knit_exit()
-```
