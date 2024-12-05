@@ -15,7 +15,7 @@ A [workflowr][] project.
 
 ## Data pre-processing
 
-Raw data is available at Gene Expression Omnibus (GEO, NCBI; accession number [XXXXX](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE180097)). Data processing is computationally expensive and is not covered in this repository. We provide description of the data pre-processing workflow together with software version in the original publication. Processed data, large result files, additional functions, references and metadata are were archived at [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.10215050.svg)](https://doi.org/10.5281/zenodo.10215050)
+Raw data is available at Gene Expression Omnibus (GEO, NCBI; accession number [GSE249233](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE249233)). Data processing is computationally expensive and is not covered in this repository. We provide description of the data pre-processing workflow together with software version in the original publication. Processed data, large result files, additional functions, references and metadata are were archived at [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.10215050.svg)](https://doi.org/10.5281/zenodo.10215050)
 
 
 ##  Data and code availability
