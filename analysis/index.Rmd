@@ -20,7 +20,9 @@ Raw data is available at Gene Expression Omnibus (GEO, NCBI; accession number [G
 
 ##  Data and code availability
 
-To reproduce our analysis, first clone source code from the [GitHub repository](https://github.com/TheAcetoLab/dicct-trial). This repository is also archived at [![DOI](https://zenodo.org/badge/DOI/XXX/XXXX.svg)](https://doi.org/XXXX/XXXX)
+https://zenodo.org/records/14282118
+
+To reproduce our analysis, first clone source code from the [GitHub repository](https://github.com/TheAcetoLab/dicct-trial). This repository is also archived at [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.14282117.svg)](https://doi.org/10.5281/zenodo.14282117)
 
     git clone https://github.com/TheAcetoLab/dicct-trial
 
